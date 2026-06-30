@@ -8,9 +8,9 @@ import {
 } from '../ui/utils/wizardFlow.js';
 
 const completeForm = {
+  filmLengthM: '300',
   filmWidthMm: '500',
   thicknessMicron: '12',
-  netWeightKg: '1.6488',
   densityGPerCm3: '0.00916',
   coreSpec: '3in',
   customCoreInnerDiameterMm: '',
@@ -25,11 +25,11 @@ test('wizard exposes the five required steps in order', () => {
 });
 
 test('Step 1 blocks progress when product parameters are incomplete', () => {
-  const validation = getStepValidation(0, { ...completeForm, netWeightKg: '' }, { hasCalculation: false });
+  const validation = getStepValidation(0, { ...completeForm, filmLengthM: '' }, { hasCalculation: false });
 
   assert.equal(validation.ok, false);
-  assert.match(validation.message, /单卷净重/);
-  assert.equal(canEnterStep(1, { ...completeForm, netWeightKg: '' }, { hasCalculation: false }), false);
+  assert.match(validation.message, /膜长/);
+  assert.equal(canEnterStep(1, { ...completeForm, filmLengthM: '' }, { hasCalculation: false }), false);
 });
 
 test('Step 2 blocks calculation when core or roll count is missing', () => {

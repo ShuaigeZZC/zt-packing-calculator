@@ -9,9 +9,9 @@ import { renderDecisionExportStep } from '../ui/components/DecisionExportStep.js
 import { buildPackagingWorkbenchModel } from '../ui/packagingAdapter.js';
 
 const form = {
+  filmLengthM: '300',
   filmWidthMm: '500',
   thicknessMicron: '12',
-  netWeightKg: '1.6488',
   densityGPerCm3: '0.00916',
   coreSpec: '3in',
   customCoreInnerDiameterMm: '',
@@ -27,6 +27,10 @@ const historicalModel = {
       confidenceLevel: 'A',
       customer: '测试客户',
       source: '测试!1',
+      filmWidthMm: 500,
+      thicknessMm: 0.012,
+      netWeightKg: 1.65,
+      rollCount: 6,
       box: { lengthCm: 22, widthCm: 33, heightCm: 53 },
       displayReason: '膜宽一致，每箱卷数一致。',
       sizeDifference: { summary: '历史箱规相对系统推荐：长 +0.0 cm，宽 +0.0 cm，高 +0.0 cm' }
@@ -53,14 +57,17 @@ test('stepper renders the five required step labels', () => {
   assert.match(html, /is-current/);
 });
 
-test('product params step renders net weight, film width, thickness, and density fields', () => {
+test('product params step renders length, film width, thickness, and density fields without examples', () => {
   const html = renderProductParamsStep({ form, errorMessage: '' });
 
   assert.match(html, /产品参数/);
+  assert.match(html, /膜长/);
   assert.match(html, /膜宽/);
-  assert.match(html, /单卷净重/);
   assert.match(html, /厚度/);
   assert.match(html, /材料密度/);
+  assert.doesNotMatch(html, /单卷净重/);
+  assert.doesNotMatch(html, /示例1/);
+  assert.doesNotMatch(html, /data-example-index/);
 });
 
 test('core and packing step explains inner diameter plus 10 mm outer diameter', () => {
@@ -88,6 +95,7 @@ test('historical reference step keeps history as reference-only evidence', () =>
   assert.match(html, /历史数据仅作为经验参考，不会覆盖算法推荐结果。/);
   assert.match(html, /A类/);
   assert.match(html, /测试客户/);
+  assert.match(html, /历史膜规格：50.0 cm \/ 12 micron \/ 1.65 kg \/ 6 卷\/箱/);
   assert.doesNotMatch(html, /C类/);
   assert.doesNotMatch(html, /D类/);
 });
@@ -105,4 +113,18 @@ test('decision export step keeps business result primary and JSON secondary', ()
   assert.match(html, /参考历史箱规/);
   assert.match(html, /developer JSON/);
   assert.match(html, /复制 JSON/);
+});
+
+test('decision export step shows active state after a decision draft is generated', () => {
+  const html = renderDecisionExportStep({
+    model,
+    historicalModel,
+    decisionDraft: {
+      decision_type: 'use_algorithm',
+      selected_box: { source: 'algorithm' }
+    }
+  });
+
+  assert.match(html, /class="active" type="button" data-decision-type="use_algorithm"/);
+  assert.match(html, /已选择“采用系统推荐”/);
 });

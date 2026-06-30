@@ -4,12 +4,12 @@ import { renderCoreAndPackingStep } from './components/CoreAndPackingStep.js';
 import { renderCalculationResultStep } from './components/CalculationResultStep.js';
 import { renderHistoricalReferenceStep } from './components/HistoricalReferenceStep.js';
 import { renderDecisionExportStep } from './components/DecisionExportStep.js';
-import { QUICK_EXAMPLES, buildPackagingWorkbenchModel, deriveCoreTube } from './packagingAdapter.js';
+import { DEFAULT_FORM_VALUES, buildPackagingWorkbenchModel, deriveCoreTube } from './packagingAdapter.js';
 import { buildDecisionDraft, buildHistoricalReferenceModel } from '../src/adapters/historicalReferenceAdapter.js';
 import { canEnterStep, getStepValidation, validateCoreAndPacking, validateProductParams } from './utils/wizardFlow.js';
 
 const wizardRoot = document.querySelector('#wizard-root');
-const initialForm = { ...QUICK_EXAMPLES[0].values };
+const initialForm = { ...DEFAULT_FORM_VALUES };
 const state = {
   currentStep: 0,
   maxCompletedStep: 0,
@@ -76,29 +76,21 @@ function handleFormInput(event) {
   state.errorMessage = '';
   state.decisionDraft = null;
 
-  if (validateProductParams(state.form).ok && validateCoreAndPacking(state.form).ok) {
+  const canCalculate = validateProductParams(state.form).ok && validateCoreAndPacking(state.form).ok;
+  if (canCalculate) {
     refreshCalculationModel();
     refreshHistoricalModel();
   }
 
-  render();
+  if (field.tagName === 'SELECT' || event.type === 'change') {
+    render();
+  }
 }
 
 function handleWizardClick(event) {
   const stepButton = event.target.closest('[data-step-index]');
   if (stepButton) {
     goToStep(Number(stepButton.dataset.stepIndex));
-    return;
-  }
-
-  const exampleButton = event.target.closest('[data-example-index]');
-  if (exampleButton) {
-    state.form = { ...QUICK_EXAMPLES[Number(exampleButton.dataset.exampleIndex)].values };
-    state.errorMessage = '';
-    state.decisionDraft = null;
-    refreshCalculationModel();
-    refreshHistoricalModel();
-    render();
     return;
   }
 

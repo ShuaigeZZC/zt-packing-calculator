@@ -30,7 +30,7 @@ const result = calculatePackaging({
   rollCount: 6,
   netWeightG: 1648.8,
   filmWidthMm: 500,
-  coreDiameterMm: 76.2,
+  coreDiameterMm: 86.2,
   thicknessMm: 0.012,
   densityGPerCm3: 0.00916
 });
@@ -80,7 +80,8 @@ not change to compensate for UI units.
 
 The browser UI is a five-step wizard:
 
-1. Product parameters: film width, thickness, net weight, and density.
+1. Product parameters: film length, film width, thickness, and density. The UI
+   derives net weight from those fields.
 2. Paper core and packing: paper-core inner diameter, calculated outer diameter,
    and roll count.
 3. Algorithm recommendation: physics, process rules, layout, and carton size.
@@ -139,14 +140,14 @@ Business priority outranks pure squareness:
     roll_count: 6,
     net_weight_g: 1648.8,
     film_width_mm: 500,
-    core_diameter_mm: 76.2,
+    core_diameter_mm: 86.2,
     thickness_mm: 0.012,
     density_g_cm3: 0.00916
   },
   physics: {
-    D_raw: 101.932,
-    D_final: 102,
-    rounding_delta: 0.068,
+    D_raw: 109.61,
+    D_final: 110,
+    rounding_delta: 0.39,
     length_m: 300
   },
   rules: {
@@ -157,8 +158,8 @@ Business priority outranks pure squareness:
     layout: '2x3',
     factors: { a: 2, b: 3 },
     box_dimensions_mm: {
-      length: 204,
-      width: 306,
+      length: 220,
+      width: 330,
       height: 530
     },
     optimization: {

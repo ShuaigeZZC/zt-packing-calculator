@@ -39,6 +39,7 @@ function renderHistoryRow(record, index) {
             <span>${escapeHtml(record.source || '来源未记录')}</span>
           </div>
           <h3>${escapeHtml(record.customer)}</h3>
+          <p class="history-spec">${escapeHtml(formatHistorySpec(record))}</p>
           <p>${escapeHtml(record.displayReason)}</p>
         </div>
         <div class="history-size">
@@ -50,6 +51,17 @@ function renderHistoryRow(record, index) {
         <span>${escapeHtml(record.sizeDifference?.summary ?? '暂无尺寸差异记录')}</span>
       </div>
     </article>`;
+}
+
+function formatHistorySpec(record) {
+  const filmWidth = Number.isFinite(record.filmWidthMm) ? `${formatFixed(record.filmWidthMm / 10, 1)} cm` : '膜宽缺失';
+  const thickness = Number.isFinite(record.thicknessMm)
+    ? `${formatFixed(record.thicknessMm * 1000, 0)} micron`
+    : '厚度缺失';
+  const netWeight = Number.isFinite(record.netWeightKg) ? `${formatFixed(record.netWeightKg, 2)} kg` : '净重缺失';
+  const rollCount = Number.isFinite(record.rollCount) ? `${record.rollCount} 卷/箱` : '卷数缺失';
+
+  return `历史膜规格：${filmWidth} / ${thickness} / ${netWeight} / ${rollCount}`;
 }
 
 function renderQualitySummary(summary = {}) {

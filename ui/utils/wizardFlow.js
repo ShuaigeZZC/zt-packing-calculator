@@ -59,16 +59,16 @@ export function updateWizardState(state, action) {
 }
 
 export function validateProductParams(form) {
+  if (!isPositiveNumber(form.filmLengthM)) {
+    return { ok: false, message: '请填写有效的膜长。' };
+  }
+
   if (!isPositiveNumber(form.filmWidthMm)) {
     return { ok: false, message: '请填写有效的膜宽。' };
   }
 
   if (!isPositiveNumber(form.thicknessMicron)) {
     return { ok: false, message: '请填写有效的厚度。' };
-  }
-
-  if (!isPositiveNumber(form.netWeightKg)) {
-    return { ok: false, message: '请填写有效的单卷净重。' };
   }
 
   if (!isPositiveNumber(form.densityGPerCm3)) {

@@ -4,33 +4,15 @@ import { formatCompact, formatFixed, kgToG, micronToMm, mmToCm } from './utils/u
 
 export { CORE_OPTIONS };
 
-export const QUICK_EXAMPLES = [
-  {
-    title: '示例1（常用）',
-    description: '500mm / 12micron / 1.65kg / 6卷',
-    values: baseExample({ netWeightKg: '1.6488', filmWidthMm: '500', rollCount: '6' })
-  },
-  {
-    title: '示例2（重型）',
-    description: '500mm / 12micron / 2.75kg / 6卷',
-    values: baseExample({ netWeightKg: '2.748', filmWidthMm: '500', rollCount: '6' })
-  },
-  {
-    title: '示例3（450mm）',
-    description: '450mm / 12micron / 1.48kg / 6卷',
-    values: baseExample({ netWeightKg: '1.4839', filmWidthMm: '450', rollCount: '6' })
-  },
-  {
-    title: '示例4（4卷）',
-    description: '500mm / 12micron / 1.65kg / 4卷',
-    values: baseExample({ netWeightKg: '1.6488', filmWidthMm: '500', rollCount: '4' })
-  },
-  {
-    title: '示例5（8卷）',
-    description: '500mm / 12micron / 1.65kg / 8卷',
-    values: baseExample({ netWeightKg: '1.6488', filmWidthMm: '500', rollCount: '8' })
-  }
-];
+export const DEFAULT_FORM_VALUES = {
+  filmLengthM: '300',
+  filmWidthMm: '500',
+  thicknessMicron: '12',
+  densityGPerCm3: '0.00916',
+  coreSpec: '3in',
+  customCoreInnerDiameterMm: '',
+  rollCount: '6'
+};
 
 export function deriveCoreTube(values) {
   return buildCoreTubeModel({
@@ -40,13 +22,24 @@ export function deriveCoreTube(values) {
   });
 }
 
+export function deriveNetWeightKg(values) {
+  const filmLengthM = Number(values.filmLengthM);
+  const thicknessMicron = Number(values.thicknessMicron);
+  const filmWidthCm = Number(values.filmWidthMm) / 10;
+  const densityFactor = Number(values.densityGPerCm3);
+  const netWeightG = filmLengthM * thicknessMicron * filmWidthCm * densityFactor;
+
+  return Number((netWeightG / 1000).toFixed(4));
+}
+
 export function parsePackagingForm(values) {
   const core = deriveCoreTube(values);
+  const netWeightKg = deriveNetWeightKg(values);
 
   return {
     filmWidthMm: Number(values.filmWidthMm),
     thicknessMm: micronToMm(values.thicknessMicron),
-    netWeightG: kgToG(values.netWeightKg),
+    netWeightG: kgToG(netWeightKg),
     // The algorithm kernel field is named coreDiameterMm, but the physics formula needs paper-core outer diameter.
     coreDiameterMm: core.outerDiameterMm,
     densityGPerCm3: Number(values.densityGPerCm3),
@@ -100,6 +93,7 @@ function buildDisplayModel(values, input, core, result) {
 
   const thicknessDisplay = `${formatCompact(values.thicknessMicron)} micron`;
   const densityDisplay = formatCompact(input.densityGPerCm3);
+  const filmLengthDisplay = `${formatCompact(values.filmLengthM)} m`;
   const filmWidthDisplay = `${formatCompact(input.filmWidthMm)} mm`;
   const netWeightDisplay = `${formatFixed(input.netWeightG / 1000, 2)} kg`;
   const rawDiameterMm = formatFixed(result.physics.D_raw, 2);
@@ -122,6 +116,7 @@ function buildDisplayModel(values, input, core, result) {
 
   return {
     inputDisplay: {
+      filmLength: filmLengthDisplay,
       filmWidth: filmWidthDisplay,
       netWeight: netWeightDisplay,
       thickness: thicknessDisplay,
@@ -176,17 +171,4 @@ function formatDebugCandidates(candidates) {
     manufacturingSimplicityPenalty: formatFixed(candidate.score.manufacturingSimplicityPenalty, 2),
     industrialPreferenceBonus: formatFixed(candidate.score.industrialPreferenceBonus, 2)
   }));
-}
-
-function baseExample(overrides) {
-  return {
-    filmWidthMm: '500',
-    thicknessMicron: '12',
-    netWeightKg: '1.6488',
-    densityGPerCm3: '0.00916',
-    coreSpec: '3in',
-    customCoreInnerDiameterMm: '',
-    rollCount: '6',
-    ...overrides
-  };
 }

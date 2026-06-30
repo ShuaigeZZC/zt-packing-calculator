@@ -2,6 +2,7 @@ import { escapeHtml } from '../utils/unitConversion.js';
 
 export function renderDecisionExportStep({ model, historicalModel, decisionDraft }) {
   const references = historicalModel?.references ?? [];
+  const selectedDecisionType = decisionDraft?.decision_type ?? '';
 
   return `
     <section class="wizard-step" aria-labelledby="decision-step-title">
@@ -35,14 +36,16 @@ export function renderDecisionExportStep({ model, historicalModel, decisionDraft
         </article>
       </div>
       <div class="decision-actions">
-        <button type="button" data-decision-type="use_algorithm">采用系统推荐</button>
-        <button type="button" data-decision-type="reference_history">参考历史箱规</button>
-        <button type="button" data-decision-type="manual_adjust">手动调整</button>
-        <button type="button" data-decision-type="customer_special">标记为客户特殊要求</button>
-        <button type="button" data-decision-type="mark_anomaly">标记为疑似异常</button>
+        ${renderDecisionButton('use_algorithm', '采用系统推荐', selectedDecisionType)}
+        ${renderDecisionButton('reference_history', '参考历史箱规', selectedDecisionType)}
+        ${renderDecisionButton('manual_adjust', '手动调整', selectedDecisionType)}
+        ${renderDecisionButton('customer_special', '标记为客户特殊要求', selectedDecisionType)}
+        ${renderDecisionButton('mark_anomaly', '标记为疑似异常', selectedDecisionType)}
       </div>
       <p class="decision-note" id="decision-summary">${
-        decisionDraft ? `已生成“${escapeHtml(decisionLabel(decisionDraft.decision_type))}”草稿。` : '尚未生成决策草稿。'
+        decisionDraft
+          ? `已选择“${escapeHtml(decisionLabel(decisionDraft.decision_type))}”，下方已生成决策草稿。`
+          : '尚未生成决策草稿。点击上方任一按钮后，会在下方生成草稿。'
       }</p>
       <div class="json-actions">
         <button type="button" data-copy-target="developer">复制 JSON</button>
@@ -64,6 +67,10 @@ export function renderDecisionExportStep({ model, historicalModel, decisionDraft
         <button class="secondary-button" type="button" data-action="back">上一步</button>
       </div>
     </section>`;
+}
+
+function renderDecisionButton(type, label, selectedDecisionType) {
+  return `<button class="${type === selectedDecisionType ? 'active' : ''}" type="button" data-decision-type="${type}">${label}</button>`;
 }
 
 function decisionLabel(type) {

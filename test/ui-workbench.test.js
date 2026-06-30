@@ -2,16 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   CORE_OPTIONS,
-  QUICK_EXAMPLES,
+  DEFAULT_FORM_VALUES,
   buildPackagingWorkbenchModel,
   deriveCoreTube,
+  deriveNetWeightKg,
   parsePackagingForm
 } from '../ui/packagingAdapter.js';
 
 const formValues = {
+  filmLengthM: '300',
   filmWidthMm: '500',
   thicknessMicron: '12',
-  netWeightKg: '1.6488',
   densityGPerCm3: '0.00916',
   coreSpec: '3in',
   customCoreInnerDiameterMm: '',
@@ -35,6 +36,11 @@ test('adapter passes 86.2 mm outer diameter to the algorithm for 3 inch core', (
   assert.equal(input.thicknessMm, 0.012);
   assert.equal(input.densityGPerCm3, 0.00916);
   assert.equal(input.rollCount, 6);
+});
+
+test('adapter derives net weight from film length, width, thickness, and density', () => {
+  assert.equal(deriveNetWeightKg(formValues), 1.6488);
+  assert.equal(parsePackagingForm(formValues).netWeightG, 1648.8);
 });
 
 test('custom paper core input is treated as inner diameter and adds 10 mm for calculation', () => {
@@ -66,6 +72,7 @@ test('builds stepper-ready natural language result modules', () => {
   const model = buildPackagingWorkbenchModel(formValues);
 
   assert.equal(model.ok, true);
+  assert.equal(model.inputDisplay.filmLength, '300 m');
   assert.equal(model.inputDisplay.filmWidth, '500 mm');
   assert.equal(model.inputDisplay.netWeight, '1.65 kg');
   assert.equal(model.inputDisplay.thickness, '12 micron');
@@ -114,13 +121,12 @@ test('builds document-style error state for unsupported roll counts', () => {
   assert.equal(model.json, '');
 });
 
-test('provides the five required quick examples using net weight input', () => {
-  assert.equal(QUICK_EXAMPLES.length, 5);
-  assert.equal(QUICK_EXAMPLES[0].values.thicknessMicron, '12');
-  assert.equal(QUICK_EXAMPLES[0].values.densityGPerCm3, '0.00916');
-  assert.equal(QUICK_EXAMPLES[0].values.netWeightKg, '1.6488');
-  assert.equal(QUICK_EXAMPLES[0].values.filmWidthMm, '500');
-  assert.equal(Object.hasOwn(QUICK_EXAMPLES[0].values, 'filmLengthM'), false);
+test('default form keeps length input and does not expose quick examples', () => {
+  assert.equal(DEFAULT_FORM_VALUES.filmLengthM, '300');
+  assert.equal(DEFAULT_FORM_VALUES.thicknessMicron, '12');
+  assert.equal(DEFAULT_FORM_VALUES.densityGPerCm3, '0.00916');
+  assert.equal(DEFAULT_FORM_VALUES.filmWidthMm, '500');
+  assert.equal(Object.hasOwn(DEFAULT_FORM_VALUES, 'netWeightKg'), false);
 });
 
 test('deriveCoreTube exposes the reusable core tube conversion', () => {
