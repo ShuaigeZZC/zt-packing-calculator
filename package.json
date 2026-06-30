@@ -1,0 +1,13 @@
+{
+  "name": "zt-packing-physics-engine",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "ui": "node scripts/serve-ui.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
