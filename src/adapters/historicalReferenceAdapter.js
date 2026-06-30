@@ -41,6 +41,7 @@ export function buildDecisionDraft({
 
   return {
     input_spec: result?.input ?? {},
+    core: packagingModel?.core ?? {},
     algorithm_recommendation: result?.packing?.box_dimensions_mm ?? {},
     historical_references: historicalReferences ?? [],
     selected_box: selectedBox ?? {},

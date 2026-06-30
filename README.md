@@ -49,9 +49,47 @@ const result = calculatePackaging(input, { includeDebug: true });
 | `rollCount` | count | yes | Number of rolls in one carton. |
 | `netWeightG` | g | yes | Net film weight per roll. |
 | `filmWidthMm` | mm | yes | Film width. |
-| `coreDiameterMm` | mm | yes | Paper core outer diameter. |
+| `coreDiameterMm` | mm | yes | Paper core outer diameter used by the physics formula. |
 | `thicknessMm` | mm | yes | Film thickness. |
 | `densityGPerCm3` | coefficient | no | Business density factor, defaults to `0.00916`. |
+
+## UI Paper Core Rule
+
+The UI shows paper-core sizes in the industry convention: inner diameter. The
+algorithm kernel still receives the outer diameter required by the roll-diameter
+formula.
+
+```text
+coreOuterDiameterMm = coreInnerDiameterMm + 10
+```
+
+Example:
+
+```text
+UI option: 3 inch (76.2 mm inner diameter)
+Adapter model: coreInnerDiameterMm = 76.2
+Adapter allowance: coreWallAllowanceMm = 10
+Kernel input: coreDiameterMm = 86.2
+```
+
+`ui/packagingAdapter.js` owns this conversion. UI components must not pass the
+inner diameter directly to `calculatePackaging()`, and the algorithm formulas do
+not change to compensate for UI units.
+
+## Wizard Flow
+
+The browser UI is a five-step wizard:
+
+1. Product parameters: film width, thickness, net weight, and density.
+2. Paper core and packing: paper-core inner diameter, calculated outer diameter,
+   and roll count.
+3. Algorithm recommendation: physics, process rules, layout, and carton size.
+4. Historical reference: A/B records only, displayed as reference evidence.
+5. Confirmation and export: decision draft, developer JSON, dimensions, and
+   calculation explanation.
+
+Historical records remain reference-only evidence and never override the
+algorithm recommendation.
 
 ## Formulas
 

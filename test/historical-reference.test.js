@@ -8,9 +8,17 @@ const currentInput = {
   rollCount: 6,
   netWeightG: 1648.8,
   filmWidthMm: 500,
-  coreDiameterMm: 76.2,
+  coreDiameterMm: 86.2,
   thicknessMm: 0.012,
   densityGPerCm3: 0.00916
+};
+
+const core = {
+  label: '3 inch',
+  innerDiameterMm: 76.2,
+  wallAllowanceMm: 10,
+  outerDiameterMm: 86.2,
+  explanation: '当前选择 3 inch 纸管，行业规格 76.2 mm 为内径。系统计算卷径时按 86.2 mm 外径处理。'
 };
 
 const algorithmResult = calculatePackaging(currentInput);
@@ -26,13 +34,13 @@ const historicalData = {
     {
       id: 'A-near',
       confidenceLevel: 'A',
-      customer: '以色列 Packo',
+      customer: '以色列客户',
       source: '以色列!1',
       filmWidthMm: 500,
       thicknessMm: 0.012,
       netWeightKg: 1.65,
       rollCount: 6,
-      box: { lengthCm: 20.6, widthCm: 30.8, heightCm: 53 },
+      box: { lengthCm: 22, widthCm: 33, heightCm: 53 },
       comparisonStatus: '接近理论区间'
     },
     {
@@ -44,8 +52,8 @@ const historicalData = {
       thicknessMm: 0.012,
       netWeightKg: 1.7,
       rollCount: 6,
-      box: { lengthCm: 21, widthCm: 31, heightCm: 53 },
-      comparisonStatus: '偏宽松'
+      box: { lengthCm: 22.5, widthCm: 33.5, heightCm: 53 },
+      comparisonStatus: '可参考'
     },
     {
       id: 'A-far',
@@ -57,7 +65,7 @@ const historicalData = {
       netWeightKg: 15,
       rollCount: 1,
       box: { lengthCm: 75, widthCm: 30, heightCm: 30 },
-      comparisonStatus: '偏宽松'
+      comparisonStatus: '可参考'
     },
     {
       id: 'C-hidden',
@@ -78,7 +86,7 @@ const historicalData = {
       filmWidthMm: 500,
       netWeightKg: 1.65,
       rollCount: 6,
-      box: { lengthCm: 20.4, widthCm: 30.6, heightCm: 53 },
+      box: { lengthCm: 22, widthCm: 33, heightCm: 53 },
       comparisonStatus: '禁止进入推荐'
     },
     {
@@ -157,13 +165,13 @@ test('historical references do not mutate calculatePackaging output', () => {
   assert.deepEqual(after, before);
 });
 
-test('decision draft contains algorithm result and historical references without persistence', () => {
+test('decision draft contains algorithm result, core metadata, and historical references without persistence', () => {
   const historicalModel = buildHistoricalReferenceModel({
     packagingModel: { ok: true, result: algorithmResult },
     historicalData
   });
   const draft = buildDecisionDraft({
-    packagingModel: { ok: true, result: algorithmResult },
+    packagingModel: { ok: true, result: algorithmResult, core },
     historicalReferences: historicalModel.references,
     selectedBox: algorithmResult.packing.box_dimensions_mm,
     decisionType: 'use_algorithm',
@@ -174,6 +182,8 @@ test('decision draft contains algorithm result and historical references without
   assert.equal(draft.decision_type, 'use_algorithm');
   assert.equal(draft.operator_note, '测试确认');
   assert.deepEqual(draft.algorithm_recommendation, algorithmResult.packing.box_dimensions_mm);
+  assert.equal(draft.core.innerDiameterMm, 76.2);
+  assert.equal(draft.core.outerDiameterMm, 86.2);
   assert.equal(draft.historical_references.length > 0, true);
   assert.equal(Object.hasOwn(draft, 'persisted'), false);
 });

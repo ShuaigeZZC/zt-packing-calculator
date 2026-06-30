@@ -4,86 +4,97 @@ import {
   CORE_OPTIONS,
   QUICK_EXAMPLES,
   buildPackagingWorkbenchModel,
+  deriveCoreTube,
   parsePackagingForm
 } from '../ui/packagingAdapter.js';
 
 const formValues = {
-  filmLengthM: '300',
-  filmWidthCm: '50',
+  filmWidthMm: '500',
   thicknessMicron: '12',
-  coreSpec: '3in',
-  customCoreDiameterMm: '',
+  netWeightKg: '1.6488',
   densityGPerCm3: '0.00916',
+  coreSpec: '3in',
+  customCoreInnerDiameterMm: '',
   rollCount: '6'
 };
 
-test('parses document UI units into algorithm kernel input', () => {
-  assert.deepEqual(parsePackagingForm(formValues), {
-    filmWidthMm: 500,
-    thicknessMm: 0.012,
-    netWeightG: 1648.8,
-    coreDiameterMm: 76.2,
-    densityGPerCm3: 0.00916,
-    rollCount: 6
+test('shows 3 inch paper core as 76.2 mm inner diameter', () => {
+  const option = CORE_OPTIONS.find((item) => item.value === '3in');
+
+  assert.equal(option.label, '3 inch (76.2 mm 内径)');
+  assert.equal(option.coreInnerDiameterMm, 76.2);
+  assert.equal(option.coreOuterDiameterMm, undefined);
+});
+
+test('adapter passes 86.2 mm outer diameter to the algorithm for 3 inch core', () => {
+  const input = parsePackagingForm(formValues);
+
+  assert.equal(input.coreDiameterMm, 86.2);
+  assert.equal(input.netWeightG, 1648.8);
+  assert.equal(input.filmWidthMm, 500);
+  assert.equal(input.thicknessMm, 0.012);
+  assert.equal(input.densityGPerCm3, 0.00916);
+  assert.equal(input.rollCount, 6);
+});
+
+test('custom paper core input is treated as inner diameter and adds 10 mm for calculation', () => {
+  const input = parsePackagingForm({
+    ...formValues,
+    coreSpec: 'custom',
+    customCoreInnerDiameterMm: '76.2'
   });
+
+  assert.equal(input.coreDiameterMm, 86.2);
 });
 
-test('supports friendly core tube options including custom millimeters', () => {
-  assert.ok(CORE_OPTIONS.some((option) => option.value === '3in' && option.diameterMm === 76.2));
-
-  assert.equal(parsePackagingForm({ ...formValues, coreSpec: 'custom', customCoreDiameterMm: '80' }).coreDiameterMm, 80);
-});
-
-test('builds document-style natural language result modules', () => {
+test('display model keeps paper core inner and outer diameter metadata', () => {
   const model = buildPackagingWorkbenchModel(formValues);
 
   assert.equal(model.ok, true);
-  assert.equal(model.inputDisplay.filmLength, '300 m');
-  assert.equal(model.inputDisplay.filmWidth, '50 cm');
+  assert.deepEqual(model.core, {
+    label: '3 inch',
+    innerDiameterMm: 76.2,
+    wallAllowanceMm: 10,
+    outerDiameterMm: 86.2,
+    explanation: '当前选择 3 inch 纸管，行业规格 76.2 mm 为内径。系统计算卷径时按 86.2 mm 外径处理。'
+  });
+  assert.equal(model.result.input.core_diameter_mm, 86.2);
+  assert.notEqual(model.result.input.core_diameter_mm, model.core.innerDiameterMm);
+});
+
+test('builds stepper-ready natural language result modules', () => {
+  const model = buildPackagingWorkbenchModel(formValues);
+
+  assert.equal(model.ok, true);
+  assert.equal(model.inputDisplay.filmWidth, '500 mm');
   assert.equal(model.inputDisplay.netWeight, '1.65 kg');
   assert.equal(model.inputDisplay.thickness, '12 micron');
   assert.equal(model.inputDisplay.density, '0.00916');
-  assert.equal(model.inputDisplay.coreSpec, '3 inch (76.2 mm)');
+  assert.equal(model.inputDisplay.coreSpec, '3 inch (76.2 mm 内径)');
 
-  assert.equal(model.physics.D_raw, '10.19 cm');
-  assert.equal(model.physics.D_final, '10.2 cm');
-  assert.equal(model.physics.rounding_delta, '0.01 cm');
+  assert.equal(model.physics.D_raw, '109.61 mm');
+  assert.equal(model.physics.D_final, '110 mm');
+  assert.equal(model.physics.rounding_delta, '0.39 mm');
   assert.equal(model.physics.length_m, '300 m');
   assert.equal(model.physics.net_weight, '1.65 kg');
-  assert.match(model.physics.explanation, /推导单卷净重约为 1.65 kg/);
-  assert.match(model.physics.explanation, /理论外径约为 10.19 cm/);
-  assert.match(model.physics.explanation, /建议按 10.2 cm/);
-  assert.match(model.physics.explanation, /厚度 12 micron/);
-  assert.match(model.physics.explanation, /密度系数 0.00916/);
-  assert.match(model.physics.explanation, /单卷长度约为 300 m/);
+  assert.match(model.physics.explanation, /系统计算卷径时按 86.2 mm 外径处理/);
+  assert.match(model.physics.explanation, /系统建议按 110 mm 作为单卷外径参与纸箱尺寸计算/);
 
   assert.equal(model.rules.height_cm, '53 cm');
-  assert.equal(model.rules.height_mm, '53 cm');
-  assert.match(model.rules.explanation, /基础高度为 50 cm/);
-  assert.match(model.rules.explanation, /成品箱高按 53 cm 计算/);
-
+  assert.equal(model.rules.height_mm, '530 mm');
   assert.equal(model.packing.layout, '2 x 3');
-  assert.equal(model.packing.dimensionsCm, '20.4 x 30.6 x 53.0 cm');
-  assert.equal(model.packing.grid.columns, 2);
-  assert.equal(model.packing.grid.rows, 3);
-  assert.match(model.packing.explanation, /每箱 6 卷/);
-  assert.match(model.packing.explanation, /每排 2 卷，共 3 排/);
-  assert.match(model.optimization.explanation, /行业常见摆法偏好/);
+  assert.equal(model.packing.dimensionsMm, '220 x 330 x 530 mm');
+  assert.equal(model.packing.dimensionsCm, '22.0 x 33.0 x 53.0 cm');
+});
 
-  const resultDisplayText = [
-    model.physics.D_raw,
-    model.physics.D_final,
-    model.physics.rounding_delta,
-    model.physics.length_m,
-    model.physics.net_weight,
-    model.physics.explanation,
-    model.rules.height_cm,
-    model.rules.height_mm,
-    model.rules.explanation,
-    model.packing.dimensionsCm,
-    model.packing.explanation
-  ].join('\n');
-  assert.doesNotMatch(resultDisplayText, /\b\d+(?:\.\d+)?\s*mm\b/);
+test('developer JSON includes paper core inner and outer diameter explanation', () => {
+  const model = buildPackagingWorkbenchModel(formValues);
+  const json = JSON.parse(model.json);
+
+  assert.equal(json.core.innerDiameterMm, 76.2);
+  assert.equal(json.core.wallAllowanceMm, 10);
+  assert.equal(json.core.outerDiameterMm, 86.2);
+  assert.equal(json.result.input.core_diameter_mm, 86.2);
 });
 
 test('keeps JSON structured while UI display uses kilograms', () => {
@@ -103,15 +114,21 @@ test('builds document-style error state for unsupported roll counts', () => {
   assert.equal(model.json, '');
 });
 
-test('provides the five required quick examples', () => {
+test('provides the five required quick examples using net weight input', () => {
   assert.equal(QUICK_EXAMPLES.length, 5);
-  assert.deepEqual(
-    QUICK_EXAMPLES.map((example) => example.title),
-    ['示例1（常用）', '示例2（重型）', '示例3（450mm）', '示例4（4卷）', '示例5（8卷）']
-  );
   assert.equal(QUICK_EXAMPLES[0].values.thicknessMicron, '12');
   assert.equal(QUICK_EXAMPLES[0].values.densityGPerCm3, '0.00916');
-  assert.equal(QUICK_EXAMPLES[0].values.filmLengthM, '300');
-  assert.equal(QUICK_EXAMPLES[0].values.filmWidthCm, '50');
-  assert.equal(Object.hasOwn(QUICK_EXAMPLES[0].values, 'netWeightKg'), false);
+  assert.equal(QUICK_EXAMPLES[0].values.netWeightKg, '1.6488');
+  assert.equal(QUICK_EXAMPLES[0].values.filmWidthMm, '500');
+  assert.equal(Object.hasOwn(QUICK_EXAMPLES[0].values, 'filmLengthM'), false);
+});
+
+test('deriveCoreTube exposes the reusable core tube conversion', () => {
+  assert.deepEqual(deriveCoreTube(formValues), {
+    label: '3 inch',
+    innerDiameterMm: 76.2,
+    wallAllowanceMm: 10,
+    outerDiameterMm: 86.2,
+    explanation: '当前选择 3 inch 纸管，行业规格 76.2 mm 为内径。系统计算卷径时按 86.2 mm 外径处理。'
+  });
 });
