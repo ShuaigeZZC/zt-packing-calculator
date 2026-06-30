@@ -65,7 +65,9 @@ test('product params step renders length, film width, thickness, and density fie
   assert.match(html, /膜宽/);
   assert.match(html, /厚度/);
   assert.match(html, /材料密度/);
-  assert.doesNotMatch(html, /单卷净重/);
+  assert.match(html, /推导单卷净重及卷径/);
+  assert.doesNotMatch(html, /根据重量/);
+  assert.doesNotMatch(html, /<span>单卷净重<\/span>/);
   assert.doesNotMatch(html, /示例1/);
   assert.doesNotMatch(html, /data-example-index/);
 });

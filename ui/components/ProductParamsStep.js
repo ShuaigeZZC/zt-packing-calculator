@@ -6,7 +6,7 @@ export function renderProductParamsStep({ form, errorMessage = '' }) {
       <div class="step-heading">
         <p class="eyebrow">Step 1</p>
         <h2 id="product-step-title">产品参数</h2>
-        <p>本步骤用于确定膜卷的基础物理参数，系统会根据重量、膜宽、厚度和密度计算单卷长度及卷径。</p>
+        <p>本步骤用于确定膜卷的基础物理参数，系统会根据膜长、膜宽、厚度和密度推导单卷净重及卷径。</p>
       </div>
       ${renderError(errorMessage)}
       <div class="form-grid">
