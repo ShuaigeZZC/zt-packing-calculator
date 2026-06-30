@@ -158,6 +158,32 @@
           </div>
           <p class="explanation" id="optimization-explanation">运行计算后显示推荐逻辑。</p>
         </article>
+
+        <article class="result-card historical-card">
+          <div class="card-heading">
+            <span>Evidence</span>
+            <h3>历史相似参考</h3>
+          </div>
+          <p class="reference-disclaimer" id="historical-disclaimer">历史数据仅供参考，不会覆盖算法推荐结果。</p>
+          <div class="quality-summary" id="historical-quality-summary"></div>
+          <div class="history-list" id="historical-reference-list"></div>
+          <p class="explanation hidden" id="historical-empty"></p>
+        </article>
+
+        <article class="result-card decision-card">
+          <div class="card-heading">
+            <span>Decision</span>
+            <h3>人工确认草稿</h3>
+          </div>
+          <div class="decision-actions" id="decision-actions">
+            <button type="button" data-decision-type="use_algorithm">采用系统推荐</button>
+            <button type="button" data-decision-type="reference_history">参考历史箱规</button>
+            <button type="button" data-decision-type="manual_adjust">手动调整</button>
+            <button type="button" data-decision-type="customer_special">标记为客户特殊要求</button>
+            <button type="button" data-decision-type="mark_anomaly">标记为疑似异常</button>
+          </div>
+          <p class="decision-note" id="decision-summary">尚未生成决策草稿。</p>
+        </article>
       </section>
 
       <section class="json-panel" aria-labelledby="json-title">
@@ -168,8 +194,12 @@
           <button type="button" id="copy-json">复制 JSON</button>
           <button type="button" id="copy-explanation">复制计算说明</button>
           <button type="button" id="copy-dimensions">复制纸箱尺寸</button>
+          <button type="button" id="copy-decision">复制决策草稿</button>
         </div>
+        <p class="json-subtitle">算法结果 JSON</p>
         <pre id="json-output">运行计算后显示 JSON。</pre>
+        <p class="json-subtitle">决策草稿 JSON</p>
+        <pre id="decision-output">尚未生成决策草稿。</pre>
       </section>
     </main>
 

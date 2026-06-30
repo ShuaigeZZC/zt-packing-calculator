@@ -167,8 +167,37 @@ selected `packing.layout` and `packing.box_dimensions_mm` as the stable result.
 3D renderers must consume `packing.box_dimensions_mm` and related JSON fields.
 They must not calculate diameter, height, or layout independently.
 
+## Historical Reference Layer
+
+Historical carton data is an evidence layer only. The algorithm kernel does not
+read Excel files, does not import historical JSON, and does not let historical
+records override `calculatePackaging` output.
+
+Source and generated files:
+
+- `data/历史纸箱数据_清洗报告_可信度分级表.xlsx`: source workbook for import.
+- `scripts/importHistoricalCartons.js`: import script for the workbook.
+- `src/data/historicalCartonReference.json`: generated browser-readable
+  evidence data.
+- `src/historical/*`: normalization, classification, matching, and scoring.
+- `src/adapters/historicalReferenceAdapter.js`: UI-facing adapter.
+
+Import the workbook after replacing or updating the Excel file:
+
+```powershell
+npm.cmd run import:historical
+```
+
+Only confidence levels `A` and `B` are eligible for the business reference
+panel. `C` and `D` records stay in the anomaly/debug data and are not used as
+recommendations. The UI shows up to three similar historical records and labels
+them as reference-only. Decision buttons generate a JSON draft for manual
+confirmation; they do not persist data.
+
 ## Verification
 
 ```powershell
+npm.cmd run import:historical
 npm.cmd test
+npm.cmd audit --omit=dev
 ```

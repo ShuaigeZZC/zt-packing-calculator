@@ -5,9 +5,14 @@
   "private": true,
   "scripts": {
     "test": "node --test",
-    "ui": "node scripts/serve-ui.mjs"
+    "ui": "node scripts/serve-ui.mjs",
+    "import:historical": "node scripts/importHistoricalCartons.js"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "fast-xml-parser": "^5.9.3",
+    "jszip": "^3.10.1"
   }
 }
